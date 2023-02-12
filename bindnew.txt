@@ -1,0 +1,352 @@
+====================
+Bind
+=====================
+-------------------------------------
+Note: ServerIP = 192.168.0.104
+      Client =   192.168.0.103
+      Default gateway = 192.168.0.1
+-------------------------------------
+
+
+See the server and client ip addresses
+#ifconfig 
+
+ OR
+
+#ip a
+
+-----------------------------------------------
+Check the Default gatway
+#route -n
+
+OR
+
+#ip route show
+
+------------------------------------------------
+Install apache2
+
+#sudo apt-get install apache2
+
+-------------------------------------------------
+
+Move into /var/www
+#cd /var/www
+
+Create file
+#sudo nano test.html
+
+---------------------------------------------------
+
+Type html code
+<html>
+
+<body>
+	 www.bind9test.lab
+</body>
+</html>
+
+----------------------------------------------------
+
+Edit hosts file
+#sudo nano /etc/hosts
+
+Example
+
+127.0.0.1   	localhost
+127.0.1.1   	server-nanortualBox
+
+# The following lines are desirable for IPv6 capable hosts
+::1 	ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+
+192.168.0.104 ip-192-168-0-104.bind9test.lab	ip-192.168.0.104 (this should be change)
+
+
+-------------------------------------------------------------
+
+Install utilities
+#sudo apt-get install bind9 bind9utils
+
+--------------------------------------------------------------
+
+Configure forwarders
+Move into /etc/bind
+#cd /etc/bind
+#sudo nano named.conf.options
+
+Example
+options {
+    	directory "/var/cache/bind";
+
+    	// If there is a firewall between you and nameservers you want
+    	// to talk to, you may need to fix the firewall to allow multiple
+    	// ports to talk.  See http://www.kb.cert.org/vuls/id/800113
+
+    	// If your ISP pronanoded one or more IP addresses for stable
+    	// nameservers, you probably want to use them as forwarders.
+    	// Uncomment the following block, and insert the addresses replacing
+    	// the all-0's placeholder.
+
+     	forwarders {
+            	192.168.0.1;  //Default gateway
+            	8.8.8.8;
+     	};
+
+    	//========================================================================
+    	// If BIND logs error messages about the root key being expired,
+    	// you will need to update your keys.  See https://www.isc.org/bind-keys
+    	//========================================================================
+    	dnssec-validation auto;
+
+    	listen-on-v6 { any; };
+
+
+-----------------------------------------------------------------------------------
+
+
+Configure zone information
+#cd /etc/bind
+#sudo nano named.conf.local
+
+Example
+
+//
+// Do any local configuration here
+//
+
+// Consider adding the 1918 zones here, if they are not used in your
+// organization
+//include "/etc/bind/zones.rfc1918";
+
+zone "bind9test.lab"{
+    	type master;
+    	file "/etc/bind/zones/db.bind9test.lab";
+};
+
+zone "0.168.192.in-addr.arpa"{
+    	type master;
+    	file "/etc/bind/zones/db.192";
+};
+
+
+------------------------------------------------------------------------
+
+Move into /etc/bind
+Make a directory for zones
+#sudo mkdir zones
+
+
+Move into newly created “zones” directory
+Copy the default skeleton file into zones directory
+Edit the copied file
+
+#sudo cp ../db.local db.bind9test.lab
+#sudo nano db.bind9test.lab
+
+• Update the file
+• Add IP configurations
+
+Example
+
+
+;
+; BIND data file for local loopback interface
+;
+$TTL	604800
+@   	IN  	SOA 	ip-192-168-0-104.bind9test.lab. admin.bind9test.lab.(
+                             3     	; Serial
+                     	604800     	; Refresh
+                      	86400     	; Retry
+                    	2419200     	; Expire
+                     	604800 )   	; Negative Cache TTL
+;
+bind9test.lab.      	IN  	NS  	ip-192-168-0-104.bind9test.lab.
+bind9test.lab.      	IN  	A   	192.168.0.104
+ip-192-168-0-104    	IN  	A   	192.168.0.104
+ip-192-168-0-103    	IN  	A   	192.168.0.103
+www                 	IN  	A   	192.168.0.104
+
+
+-----------------------------------------------------------------------
+
+Create reverse zone file
+#sudo cp ../db.127 db.192
+#sudo nano db.192
+
+Example
+
+
+;
+; BIND data file for local loopback interface
+;
+$TTL	604800
+@   	IN  	SOA 	ip-192-168-0-104.bind9test.lab. admin.bind9test.lab.(
+                             3     	; Serial
+                     	604800     	; Refresh
+                      	86400     	; Retry
+                    	2419200     	; Expire
+                     	604800 )   	; Negative Cache TTL
+;
+		      	IN  	NS   	ip-192-168-0-104.
+104		    	IN  	PTR   	ip-192-168-0-104.bind9test.lab.
+103    			IN  	PTR   	ip-192-168-0-103.bind9test.lab.
+104                	IN  	PTR   	www.bind9test.lab.
+
+-----------------------------------------------------------------------
+
+Check configuration validity
+#named-checkzone bind9test.lab /etc/bind/zones/db.bind9test.lab
+
+#named-checkzone bind9test.lab /etc/bind/zones/db.192
+
+-----------------------------------------------------------------------
+
+Edit local resolve file for local DNS entries
+#sudo nano /etc/resolv.conf
+
+
+# This is /run/systemd/resolve/stub-resolv.conf managed by man:systemd-resolved(8).
+# Do not edit.
+#
+# This file might be symlinked as /etc/resolv.conf. If you're looking at
+# /etc/resolv.conf and seeing this text, you have followed the symlink.
+#
+# This is a dynamic resolv.conf file for connecting local clients to the
+# internal DNS stub resolver of systemd-resolved. This file lists all
+# configured search domains.
+#
+# Run "resolvectl status" to see details about the uplink DNS servers
+# currently in use.
+#
+# Third party programs should typically not access this file directly, but only
+# through the symlink at /etc/resolv.conf. To manage man:resolv.conf(5) in a
+# different way, replace this symlink by a static file or a different symlink.
+#
+# See man:systemd-resolved.sernanoce(8) for details about the supported modes of
+# operation for /etc/resolv.conf.
+
+nameserver 192.168.0.104
+nameserver 192.168.0.1
+search bind9test.lab
+domain bind9test.lab
+
+
+-----------------------------------------------------------------------
+
+
+Restart bind servers
+#sudo systemctl restart bind9.sernanoce
+
+-----------------------------------------------------------------------
+
+Do a nslookup and observe the output
+#nslookup bind9test.lab
+#nslookup 192.168.116.133
+
+-----------------------------------------------------------------------
+
+Following configurations will be done in the client machine (192.168.116.134)
+Try to ping server machine
+#ping 192.168.116.133
+
+-----------------------------------------------------------------------
+
+Edit “resolv.conf” file
+#sudo nano /etc/resolv.conf
+
+
+# This is /run/systemd/resolve/stub-resolv.conf managed by man:systemd-resolved(8).
+# Do not edit.
+#
+# This file might be symlinked as /etc/resolv.conf. If you're looking at
+# /etc/resolv.conf and seeing this text, you have followed the symlink.
+#
+# This is a dynamic resolv.conf file for connecting local clients to the
+# internal DNS stub resolver of systemd-resolved. This file lists all
+# configured search domains.
+#
+# Run "resolvectl status" to see details about the uplink DNS servers
+# currently in use.
+#
+# Third party programs should typically not access this file directly, but only
+# through the symlink at /etc/resolv.conf. To manage man:resolv.conf(5) in a
+# different way, replace this symlink by a static file or a different symlink.
+#
+# See man:systemd-resolved.sernanoce(8) for details about the supported modes of
+# operation for /etc/resolv.conf.
+
+nameserver 192.168.0.104
+nameserver 192.168.0.1
+search bind9test.lab
+domain bind9test.lab
+
+-----------------------------------------------------------------------
+
+Verify the connection
+#ping bind9test.lab
+#ping www.bind9test.lab
+
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+-----------------------------------------------------------------------
+
+
+
+===================
+SSL Certificate
+===================
+
+#sudo apt update
+
+#sudo apt-get install apache2 apache2-doc apache2-utils openssl
+
+
+Check whether your webserver is up and running
+http://localhost (type on brouser)
+
+
+#sudo mkdir /etc/apache2/ssl
+
+#sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/apache2/ssl/apachekey.key -out /etc/apache2/ssl/apachekey.cert
+
+#cd /etc/apache2/ssl
+#ls
+#cat apachekey.cert
+#cat apachekey.key
+
+#sudo a2enmod ssl
+
+
+Edit default VHost file
+Change directory to
+#cd /etc/apache2/sites-available
+#ls
+
+
+Open the ‘default-ssl.conf’ file to make changes
+#sudo nano default-ssl.conf
+
+
+Comment existing key and certificate file paths and add new key
+
+SSLCertificateFile /etc/apache2/ssl/ (.cert)
+SSLCertificateKeyFile /etc/apache2/ssl/ (.key)
+
+#sudo a2ensite default-ssl.conf
+
+#systemctl reload apache2
+
+
+
+
+
+
+
+
+
+
+
