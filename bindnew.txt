@@ -126,9 +126,9 @@ sudo nano db.192
                      	604800 )   	; Negative Cache TTL
 ;
 		      	IN  	NS   	ip-192-168-0-104.
-104		    	IN  	PTR   	ip-192-168-0-104.bind9test.lab.
-103    			IN  	PTR   	ip-192-168-0-103.bind9test.lab.
-104                	IN  	PTR   	www.bind9test.lab.
+5		    	IN  	PTR   	ip-192-168-0-104.bind9test.lab.
+6    			IN  	PTR   	ip-192-168-0-103.bind9test.lab.
+5                	IN  	PTR   	www.bind9test.lab.
 
 -----------------------------------------------------------------------
 # Check configuration validity
@@ -138,7 +138,7 @@ named-checkzone bind9test.lab /etc/bind/zones/db.192
 -----------------------------------------------------------------------
 
 # Edit local resolve file for local DNS entries
-sudo nano /etc/resolv.conf
+sudo nano /etc/resolve.conf
 
 nameserver 192.168.0.104
 nameserver 192.168.0.1
@@ -147,6 +147,7 @@ domain bind9test.lab
 
 -----------------------------------------------------------------------
 #Restart bind servers
+service named status
 sudo systemctl restart bind9.service
 -----------------------------------------------------------------------
 
@@ -164,10 +165,10 @@ Try to ping server machine
 
 -----------------------------------------------------------------------
 
-Edit “resolv.conf” file
-#sudo nano /etc/resolv.conf
+Edit “resolve.conf” file
+#sudo nano /etc/resolve.conf
 
-nameserver 192.168.0.104
+nameserver 192.168.116.133
 nameserver 192.168.0.1
 search bind9test.lab
 domain bind9test.lab
