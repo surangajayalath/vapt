@@ -24,13 +24,13 @@ OR
 #ip route show
 
 ------------------------------------------------
-Install apache2
-#sudo apt-get install apache2
+#Install apache2
+sudo apt-get install apache2
 -------------------------------------------------
 
-Move into /var/www
-#cd /var/www
-#sudo nano test.html
+#Move into /var/www
+cd /var/www
+sudo nano test.html
 ---------------------------------------------------
 
 Type html code
@@ -43,33 +43,21 @@ Type html code
 
 ----------------------------------------------------
 
-Edit hosts file
-#sudo nano /etc/hosts
+#Edit hosts file
+sudo nano /etc/hosts
 
-Example
-
-127.0.0.1   	localhost
-127.0.1.1   	server-nanortualBox
-
-# The following lines are desirable for IPv6 capable hosts
-::1 	ip6-localhost ip6-loopback
-fe00::0 ip6-localnet
-ff00::0 ip6-mcastprefix
-ff02::1 ip6-allnodes
-ff02::2 ip6-allrouters
-
-192.168.0.104 ip-192-168-0-104.bind9test.lab	ip-192.168.0.104 (this should be change)
+# Example
+192.168.0.104 ip-192-168-0-104.bind9test.lab	ip-192.168.0.104
 -------------------------------------------------------------
 
-Install utilities
-#sudo apt-get install bind9 bind9utils
+#Install utilities
+sudo apt-get install bind9 bind9utils
 
 --------------------------------------------------------------
 
-Configure forwarders
-Move into /etc/bind
-#cd /etc/bind
-#sudo nano named.conf.options
+# Configure forwarders
+cd /etc/bind
+sudo nano named.conf.options
 
 Example
      	forwarders {
@@ -78,11 +66,11 @@ Example
      	};
 -----------------------------------------------------------------------------------
 
-Configure zone information
-#cd /etc/bind
-#sudo nano named.conf.local
+#Configure zone information
+cd /etc/bind
+sudo nano named.conf.local
 
-Example
+#Example
 zone "bind9test.lab"{
     	type master;
     	file "/etc/bind/zones/db.bind9test.lab";
@@ -95,28 +83,20 @@ zone "0.168.192.in-addr.arpa"{
 
 ------------------------------------------------------------------------
 
-Move into /etc/bind
-Make a directory for zones
-#sudo mkdir zones
+# Move into /etc/bind
+sudo mkdir zones
 
+# Move into newly created “zones” directory
+# Copy the default skeleton file into zones directory
+# Edit the copied file
 
-Move into newly created “zones” directory
-Copy the default skeleton file into zones directory
-Edit the copied file
-
-#sudo cp ../db.local db.bind9test.lab
-#sudo nano db.bind9test.lab
+sudo cp ../db.local db.bind9test.lab
+sudo nano db.bind9test.lab
 
 • Update the file
 • Add IP configurations
 
-Example
-
-
-;
-; BIND data file for local loopback interface
-;
-$TTL	604800
+#Example
 @   	IN  	SOA 	ip-192-168-0-104.bind9test.lab. admin.bind9test.lab.(
                              3     	; Serial
                      	604800     	; Refresh
@@ -133,17 +113,11 @@ www                 	IN  	A   	192.168.0.104
 
 -----------------------------------------------------------------------
 
-Create reverse zone file
-#sudo cp ../db.127 db.192
-#sudo nano db.192
+#Create reverse zone file
+sudo cp ../db.127 db.192
+sudo nano db.192
 
-Example
-
-
-;
-; BIND data file for local loopback interface
-;
-$TTL	604800
+#Example
 @   	IN  	SOA 	ip-192-168-0-104.bind9test.lab. admin.bind9test.lab.(
                              3     	; Serial
                      	604800     	; Refresh
@@ -157,16 +131,14 @@ $TTL	604800
 104                	IN  	PTR   	www.bind9test.lab.
 
 -----------------------------------------------------------------------
-
-Check configuration validity
-#named-checkzone bind9test.lab /etc/bind/zones/db.bind9test.lab
-
-#named-checkzone bind9test.lab /etc/bind/zones/db.192
+# Check configuration validity
+named-checkzone bind9test.lab /etc/bind/zones/db.bind9test.lab
+named-checkzone bind9test.lab /etc/bind/zones/db.192
 
 -----------------------------------------------------------------------
 
-Edit local resolve file for local DNS entries
-#sudo nano /etc/resolv.conf
+# Edit local resolve file for local DNS entries
+sudo nano /etc/resolv.conf
 
 nameserver 192.168.0.104
 nameserver 192.168.0.1
@@ -174,13 +146,13 @@ search bind9test.lab
 domain bind9test.lab
 
 -----------------------------------------------------------------------
-Restart bind servers
-#sudo systemctl restart bind9.sernanoce
+#Restart bind servers
+sudo systemctl restart bind9.service
 -----------------------------------------------------------------------
 
-Do a nslookup and observe the output
-#nslookup bind9test.lab
-#nslookup 192.168.116.133
+#Do a nslookup and observe the output
+nslookup bind9test.lab
+nslookup 192.168.116.133
 
 -----------------------------------------------------------------------
 -----------------------------------------------------------------------
@@ -215,23 +187,26 @@ Verify the connection
 ===================
 SSL Certificate
 ===================
-#sudo apt update
-#sudo apt-get install apache2 apache2-doc apache2-utils openssl
+sudo apt update
+sudo apt-get install apache2 apache2-doc apache2-utils openssl
+http://localhost
 
-#sudo mkdir /etc/apache2/ssl
-#sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/apache2/ssl/apachekey.key -out /etc/apache2/ssl/apachekey.cert
+sudo mkdir /etc/apache2/ssl
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/apache2/ssl/apache.key -out /etc/apache2/ssl/apache.cert
 
-#cd /etc/apache2/ssl
-#sudo a2enmod ssl
+#enable ssl module
+sudo a2enmod ssl
 
-Edit default VHost file
-#cd /etc/apache2/sites-available
-#sudo nano default-ssl.conf
-SSLCertificateFile /etc/apache2/ssl/ (.cert)
-SSLCertificateKeyFile /etc/apache2/ssl/ (.key)
+#Edit default VHost file
+cd /etc/apache2/sites-available
+sudo nano default-ssl.conf
 
-#sudo a2ensite default-ssl.conf
-#systemctl reload apache2
+SSLCertificateFile /etc/apache2/ssl/apache.cert
+SSLCertificateKeyFile /etc/apache2/ssl/apache.key
+
+#enable vhost config
+sudo a2ensite default-ssl.conf
+systemctl reload apache2
 
 
 
