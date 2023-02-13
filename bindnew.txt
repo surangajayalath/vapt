@@ -208,6 +208,38 @@ SSLCertificateKeyFile /etc/apache2/ssl/apache.key
 sudo a2ensite default-ssl.conf
 systemctl reload apache2
 
+-----------------
+
+useradd kasun 
+tail -2 /etc/passwd - checking
+passwd username
+
+ls -l /home - check home directory
+
+userdel username - remove only user
+userdel -r username - user & home direc
+
+sudo groupadd -g 5000 steam - The -g GID option is used to specify a specific GID.
+sudo tail -5 /etc/group
+
+#The -r option will create a system group using a GID from the range of valid system GID numbers listed in the /etc/login.defs file.
+sudo groupadd -r appusers - create group using GID
+
+# The groupmod command is used to change a group name to a GID mapping. The -n option is used to specify a new name.
+sudo groupmod -n javaapp appusers
+
+#The -g option is used to specify a new GID.
+sudo groupmod -g 6000 steam
+
+#The groupdel command will remove a group.
+sudo groupdel javaapp
+
+sudo usermod -aG wheel kasun - add user to group
+sudo usermod -G wheel reba - add user to group 
+
+chage -d 0 username - will force a password update on next login.
+chage -l username - will list a username's current settings.
+chage -E YYYY-MM-DD username - will expire an account on a specific day.
 
 
 
